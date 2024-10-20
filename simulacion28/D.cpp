@@ -12,7 +12,7 @@ typedef vector<bool> vb;
 #define RAYA cerr << "==============================\n"
 #define pb push_back
 #define SZ(x) int((x).size())
-
+const int MAXN = 1e5;
 typedef int tipo; 
 const int NEUT = 0;  // TODO: 
 
@@ -80,13 +80,13 @@ struct segtree_lazy {
     return op(query(l,r,l(p)), query(l,r,r(p))); 
   }
 
-  void update(int l, int r, tipo val, int p = 1) {
+  void update(int l, int r, int p = 1) {
     push(p); node &cur = t[p]; 
     if (l > cur.r or r < cur.l) return; 
     if (l <= cur.l and cur.r <= r) {
-      cur.set_lazy(val); push(p); return; 
+      cur.set_lazy(1); push(p); return; 
     }
-    update(l, r, val, l(p)); update(l, r, val, r(p)); 
+    update(l, r, l(p)); update(l, r, r(p)); 
     cur = op(t[l(p)], t[r(p)]); 
   }
 
@@ -98,28 +98,24 @@ struct segtree_lazy {
   }
 }; 
 
-vi run, izq, der; 
-vb visto; 
-vector<vi> g; 
+vi run, izq(MAXN), der(MAXN), color(MAXN), base; 
+vb visto(MAXN); 
+vector<vi> g(MAXN); 
 void dfs(int v) {
   visto[v] = true; 
   izq[v] = SZ(run); 
-  run.pb(v); 
+  run.pb(v);
+  base.pb(color[v]);
   for (auto u : g[v]) if (visto[u] == false) dfs(u); 
-  der[v] = SZ(run); 
-  run.pb(v); 
+  der[v] = SZ(run)-1;
 }
 
 int main() {
   FIN; 
 
   int n, q; cin >> n >> q; 
-  vi color(n); forn(i,n) cin >> color[i]; 
+  forn(i,n) cin >> color[i]; 
 
-  g.resize(n); 
-  visto.resize(n); 
-  izq.resize(n); 
-  der.resize(n); 
   forn(_,n-1) {
     int a, b; cin >> a >> b; 
     g[--a].pb(--b); 
@@ -129,23 +125,14 @@ int main() {
 
   // init segtree-lazy
   segtree_lazy tree; 
-  vb entre(n); 
-  vector<int> base; 
-  for (auto x : run) {
-    if (entre[x] == false) {
-      entre[x] = true; 
-      base.pb(color[x]); 
-    } else base.pb(-1); 
-  }
-  // for (auto u : base) DBG(u); 
-  tree.build(base, 2*n); 
+  tree.build(base,n); 
 
   forn(_,q) {
     int op; cin >> op; 
     if (op == 1) {
       int v; cin >> v; 
       v--; 
-      tree.update(izq[v], der[v], 1); 
+      tree.update(izq[v], der[v]); 
     } else {
       int v, c; cin >> v >> c; 
       v--; 
